@@ -67,10 +67,19 @@ personasRoute.put('/api/personas/:id', (req, res) => {
 
 // Borrar
 personasRoute.delete('/api/personas/:id', (req, res) => {
-
-    const { Persona } = require('../models/Models');
-    Persona.findOne({ _id: req.params.id })
-    .then((personaOld) => {
+    let i = 0;
+    const { Persona, Cuota, Prestamo } = require('../models/Models');
+    const personaId = req.params.id;
+    Persona.findOne({ _id: personaId })
+    .then(async(personaOld) => {
+        const cuotas = await Cuota.find({_personas: personaId});
+        const prestamos = await Prestamo.find({_personas: personaId});
+        cuotas.map(async(cuota) => {
+            await Cuota.findByIdAndRemove({_id: cuota._id});
+        });
+        prestamos.map(async(prestamo) => {
+            await Prestamo.findByIdAndRemove({_id: prestamo._id});
+        });
         if (personaOld) { // sólo borro si hay una persona con ese id
             Persona.findByIdAndRemove({ _id: personaOld._id})
             .then(() => {
